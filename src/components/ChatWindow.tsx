@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Smile, Paperclip } from "lucide-react";
+import { Send, Smile } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { MediaPicker } from "./MediaPicker";
@@ -139,6 +140,7 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
       if (messageType === 'text') {
         setNewMessage("");
       }
+      setShowMediaPicker(false);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -171,43 +173,46 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         <img 
           src={message.content} 
           alt="GIF" 
-          className="max-w-48 rounded-lg"
+          className="max-w-48 rounded-lg shadow-lg"
         />
       );
     }
-    return <p className="text-sm">{message.content}</p>;
+    return <p className="text-sm leading-relaxed">{message.content}</p>;
   };
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading messages...</div>
+      <div className="flex-1 flex items-center justify-center bg-black">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+          <div className="text-gray-400 text-sm">Loading messages...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative bg-black">
       {/* Chat Header */}
       {otherUser && (
-        <div className="bg-card border-b border-border p-4">
+        <div className="bg-gray-900 border-b border-gray-800 p-4">
           <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 ring-2 ring-gray-700">
               <AvatarImage src={otherUser.avatar_url || undefined} />
-              <AvatarFallback>
+              <AvatarFallback className="bg-gray-700 text-white">
                 {(otherUser.display_name || otherUser.email).charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium text-foreground">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
-              <p className="text-sm text-muted-foreground">{otherUser.email}</p>
+              <h3 className="font-medium text-white">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
+              <p className="text-sm text-gray-400">{otherUser.email}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black">
         {messages.map((message) => {
           const isOwnMessage = message.sender_id === currentUserId;
           return (
@@ -217,20 +222,20 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
             >
               <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 {!isOwnMessage && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-6 w-6 ring-1 ring-gray-700">
                     <AvatarImage src={message.sender.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-xs bg-gray-700 text-white">
                       {(message.sender.display_name || message.sender.email).charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <div className={`rounded-lg px-3 py-2 ${
+                <div className={`rounded-2xl px-4 py-2 shadow-lg ${
                   isOwnMessage 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary text-secondary-foreground'
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-gray-100 border border-gray-700'
                 }`}>
                   {renderMessage(message)}
-                  <p className={`text-xs mt-1 opacity-70`}>
+                  <p className={`text-xs mt-1 ${isOwnMessage ? 'text-blue-200' : 'text-gray-500'}`}>
                     {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                   </p>
                 </div>
@@ -251,24 +256,29 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
       )}
 
       {/* Message Input */}
-      <div className="bg-card border-t border-border p-4">
-        <form onSubmit={handleTextMessage} className="flex space-x-2">
+      <div className="bg-gray-900 border-t border-gray-800 p-4">
+        <form onSubmit={handleTextMessage} className="flex space-x-3">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => setShowMediaPicker(!showMediaPicker)}
+            className="text-gray-400 hover:text-white hover:bg-gray-800"
           >
-            <Smile className="h-4 w-4" />
+            <Smile className="h-5 w-5" />
           </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1"
+            className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 rounded-xl"
             disabled={sending}
           />
-          <Button type="submit" disabled={!newMessage.trim() || sending}>
+          <Button 
+            type="submit" 
+            disabled={!newMessage.trim() || sending}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Smile, Image } from "lucide-react";
+import { Search, Smile, Image, X } from "lucide-react";
 
 interface MediaPickerProps {
   onStickerSelect: (sticker: string) => void;
@@ -14,14 +14,15 @@ export const MediaPicker = ({ onStickerSelect, onGifSelect, onClose }: MediaPick
   const [activeTab, setActiveTab] = useState<'stickers' | 'gifs'>('stickers');
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sample stickers (in a real app, these would come from an API)
+  // Sample stickers
   const stickers = [
     "😀", "😂", "🥰", "😍", "🤔", "😎", "🙄", "😴", 
     "🤗", "🎉", "👍", "❤️", "🔥", "⭐", "💯", "🚀",
-    "👋", "🤝", "💪", "🙏", "😊", "😋", "🤣", "😭"
+    "👋", "🤝", "💪", "🙏", "😊", "😋", "🤣", "😭",
+    "🥳", "🤩", "😘", "🤪", "🥺", "😇", "🤭", "🤫"
   ];
 
-  // Sample GIFs (in a real app, these would come from Giphy API)
+  // Sample GIFs
   const gifs = [
     "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
     "https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif",
@@ -31,45 +32,58 @@ export const MediaPicker = ({ onStickerSelect, onGifSelect, onClose }: MediaPick
     "https://media.giphy.com/media/26gsjCZpPolPr3sBy/giphy.gif",
   ];
 
-  const filteredStickers = stickers.filter(() => true); // In real app, filter by searchQuery
-  const filteredGifs = gifs.filter(() => true); // In real app, filter by searchQuery
+  const filteredStickers = stickers.filter(() => true);
+  const filteredGifs = gifs.filter(() => true);
 
   return (
-    <div className="absolute bottom-16 left-0 right-0 bg-card border border-border rounded-t-lg shadow-lg max-h-64 overflow-hidden">
+    <div className="absolute bottom-16 left-0 right-0 bg-gray-900 border border-gray-700 rounded-t-xl shadow-2xl max-h-64 overflow-hidden mx-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div className="flex space-x-2">
           <Button
             variant={activeTab === 'stickers' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('stickers')}
+            className={activeTab === 'stickers' 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }
           >
-            <Smile className="h-4 w-4 mr-1" />
+            <Smile className="h-4 w-4 mr-2" />
             Stickers
           </Button>
           <Button
             variant={activeTab === 'gifs' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('gifs')}
+            className={activeTab === 'gifs' 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }
           >
-            <Image className="h-4 w-4 mr-1" />
+            <Image className="h-4 w-4 mr-2" />
             GIFs
           </Button>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          ×
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onClose}
+          className="text-gray-400 hover:text-white hover:bg-gray-800"
+        >
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Search */}
-      <div className="p-3 border-b border-border">
+      <div className="p-3 border-b border-gray-700">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
             placeholder={`Search ${activeTab}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500"
           />
         </div>
       </div>
@@ -81,7 +95,7 @@ export const MediaPicker = ({ onStickerSelect, onGifSelect, onClose }: MediaPick
             {filteredStickers.map((sticker, index) => (
               <button
                 key={index}
-                className="text-2xl hover:bg-accent rounded p-1 transition-colors"
+                className="text-2xl hover:bg-gray-800 rounded-lg p-2 transition-colors duration-200 hover:scale-110 transform"
                 onClick={() => {
                   onStickerSelect(sticker);
                   onClose();
@@ -96,7 +110,7 @@ export const MediaPicker = ({ onStickerSelect, onGifSelect, onClose }: MediaPick
             {filteredGifs.map((gif, index) => (
               <button
                 key={index}
-                className="aspect-square rounded overflow-hidden hover:opacity-80 transition-opacity"
+                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-all duration-200 hover:scale-105 transform border border-gray-700"
                 onClick={() => {
                   onGifSelect(gif);
                   onClose();
