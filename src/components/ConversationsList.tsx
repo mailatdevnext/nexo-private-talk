@@ -19,7 +19,7 @@ interface Conversation {
     content: string;
     created_at: string;
     sender_id: string;
-    message_type?: 'text' | 'sticker' | 'gif';
+    message_type: 'text' | 'sticker' | 'gif';
   } | null;
 }
 
@@ -100,7 +100,10 @@ export const ConversationsList = ({
           return {
             ...conv,
             other_user: otherUser,
-            last_message: lastMessage
+            last_message: lastMessage ? {
+              ...lastMessage,
+              message_type: (lastMessage.message_type || 'text') as 'text' | 'sticker' | 'gif'
+            } : null
           };
         })
       );

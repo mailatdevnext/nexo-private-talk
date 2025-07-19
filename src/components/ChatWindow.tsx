@@ -14,7 +14,7 @@ interface Message {
   content: string;
   sender_id: string;
   created_at: string;
-  message_type?: 'text' | 'sticker' | 'gif';
+  message_type: 'text' | 'sticker' | 'gif';
   sender: {
     display_name: string | null;
     email: string;
@@ -107,7 +107,14 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Type cast the message_type to ensure it matches our union type
+      const typedMessages = (data || []).map(msg => ({
+        ...msg,
+        message_type: (msg.message_type || 'text') as 'text' | 'sticker' | 'gif'
+      }));
+      
+      setMessages(typedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
