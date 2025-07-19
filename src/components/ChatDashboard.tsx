@@ -36,13 +36,13 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
   };
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-background">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-80 bg-card border-r border-border flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-blue-600">NEXO</h1>
+            <h1 className="text-2xl font-bold text-foreground">NEXO</h1>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
             </Button>
@@ -62,7 +62,7 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
 
         {/* User Search */}
         {showSearch && (
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-border">
             <UserSearch 
               currentUserId={user.id} 
               onConversationCreated={(conversationId) => {
@@ -91,7 +91,7 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
             currentUserId={user.id}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Select a conversation to start chatting</p>

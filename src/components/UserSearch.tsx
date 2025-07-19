@@ -110,11 +110,11 @@ export const UserSearch = ({ currentUserId, onConversationCreated }: UserSearchP
 
       {searchResults.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-700">Search Results</h3>
+          <h3 className="text-sm font-medium text-foreground">Search Results</h3>
           {searchResults.map((user) => (
             <div
               key={user.id}
-              className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50"
+              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent"
             >
               <div className="flex items-center space-x-3">
                 <Avatar className="h-8 w-8">
@@ -124,8 +124,8 @@ export const UserSearch = ({ currentUserId, onConversationCreated }: UserSearchP
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{user.display_name || user.email.split('@')[0]}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+                  <p className="text-sm font-medium text-foreground">{user.display_name || user.email.split('@')[0]}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
               <Button

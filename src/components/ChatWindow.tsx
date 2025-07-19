@@ -1,18 +1,19 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send } from "lucide-react";
+import { Send, Smile, Paperclip } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { MediaPicker } from "./MediaPicker";
 
 interface Message {
   id: string;
   content: string;
   sender_id: string;
   created_at: string;
+  message_type?: 'text' | 'sticker' | 'gif';
   sender: {
     display_name: string | null;
     email: string;
@@ -31,6 +32,7 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<any>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -112,9 +114,8 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+  const sendMessage = async (content: string, messageType: 'text' | 'sticker' | 'gif' = 'text') => {
+    if (!content.trim() || sending) return;
 
     setSending(true);
     try {
@@ -123,7 +124,8 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         .insert({
           conversation_id: conversationId,
           sender_id: currentUserId,
-          content: newMessage.trim()
+          content: content.trim(),
+          message_type: messageType
         });
 
       if (error) throw error;
@@ -134,7 +136,9 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      setNewMessage("");
+      if (messageType === 'text') {
+        setNewMessage("");
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -146,19 +150,47 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
     }
   };
 
+  const handleTextMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(newMessage, 'text');
+  };
+
+  const handleStickerSelect = (sticker: string) => {
+    sendMessage(sticker, 'sticker');
+  };
+
+  const handleGifSelect = (gif: string) => {
+    sendMessage(gif, 'gif');
+  };
+
+  const renderMessage = (message: Message) => {
+    if (message.message_type === 'sticker') {
+      return <span className="text-4xl">{message.content}</span>;
+    } else if (message.message_type === 'gif') {
+      return (
+        <img 
+          src={message.content} 
+          alt="GIF" 
+          className="max-w-48 rounded-lg"
+        />
+      );
+    }
+    return <p className="text-sm">{message.content}</p>;
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-gray-500">Loading messages...</div>
+        <div className="text-muted-foreground">Loading messages...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col relative">
       {/* Chat Header */}
       {otherUser && (
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-card border-b border-border p-4">
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src={otherUser.avatar_url || undefined} />
@@ -167,8 +199,8 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
-              <p className="text-sm text-gray-500">{otherUser.email}</p>
+              <h3 className="font-medium text-foreground">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
+              <p className="text-sm text-muted-foreground">{otherUser.email}</p>
             </div>
           </div>
         </div>
@@ -194,13 +226,11 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
                 )}
                 <div className={`rounded-lg px-3 py-2 ${
                   isOwnMessage 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-200 text-gray-900'
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-secondary text-secondary-foreground'
                 }`}>
-                  <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs mt-1 ${
-                    isOwnMessage ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
+                  {renderMessage(message)}
+                  <p className={`text-xs mt-1 opacity-70`}>
                     {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                   </p>
                 </div>
@@ -211,9 +241,26 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Media Picker */}
+      {showMediaPicker && (
+        <MediaPicker
+          onStickerSelect={handleStickerSelect}
+          onGifSelect={handleGifSelect}
+          onClose={() => setShowMediaPicker(false)}
+        />
+      )}
+
       {/* Message Input */}
-      <div className="bg-white border-t border-gray-200 p-4">
-        <form onSubmit={sendMessage} className="flex space-x-2">
+      <div className="bg-card border-t border-border p-4">
+        <form onSubmit={handleTextMessage} className="flex space-x-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowMediaPicker(!showMediaPicker)}
+          >
+            <Smile className="h-4 w-4" />
+          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}

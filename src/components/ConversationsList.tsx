@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +18,7 @@ interface Conversation {
     content: string;
     created_at: string;
     sender_id: string;
+    message_type?: 'text' | 'sticker' | 'gif';
   } | null;
 }
 
@@ -82,7 +82,7 @@ export const ConversationsList = ({
         (data || []).map(async (conv) => {
           const { data: lastMessage } = await supabase
             .from('messages')
-            .select('content, created_at, sender_id')
+            .select('content, created_at, sender_id, message_type')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -108,13 +108,26 @@ export const ConversationsList = ({
     }
   };
 
+  const renderLastMessage = (message: Conversation['last_message']) => {
+    if (!message) return 'No messages yet';
+    
+    const prefix = message.sender_id === currentUserId ? 'You: ' : '';
+    
+    if (message.message_type === 'sticker') {
+      return `${prefix}${message.content}`;
+    } else if (message.message_type === 'gif') {
+      return `${prefix}GIF`;
+    }
+    return `${prefix}${message.content}`;
+  };
+
   if (loading) {
-    return <div className="p-4 text-center text-gray-500">Loading conversations...</div>;
+    return <div className="p-4 text-center text-muted-foreground">Loading conversations...</div>;
   }
 
   if (conversations.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-muted-foreground">
         <p>No conversations yet.</p>
         <p className="text-sm">Search for users to start chatting!</p>
       </div>
@@ -122,12 +135,12 @@ export const ConversationsList = ({
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="divide-y divide-border">
       {conversations.map((conversation) => (
         <div
           key={conversation.id}
-          className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-            selectedConversationId === conversation.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+          className={`p-4 hover:bg-accent cursor-pointer transition-colors ${
+            selectedConversationId === conversation.id ? 'bg-accent border-r-2 border-primary' : ''
           }`}
           onClick={() => onSelectConversation(conversation.id)}
         >
@@ -140,24 +153,17 @@ export const ConversationsList = ({
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {conversation.other_user.display_name || conversation.other_user.email.split('@')[0]}
                 </p>
                 {conversation.last_message && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(conversation.last_message.created_at), { addSuffix: true })}
                   </p>
                 )}
               </div>
-              <p className="text-sm text-gray-500 truncate">
-                {conversation.last_message ? (
-                  <>
-                    {conversation.last_message.sender_id === currentUserId ? 'You: ' : ''}
-                    {conversation.last_message.content}
-                  </>
-                ) : (
-                  'No messages yet'
-                )}
+              <p className="text-sm text-muted-foreground truncate">
+                {renderLastMessage(conversation.last_message)}
               </p>
             </div>
           </div>
