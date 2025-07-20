@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Send, Smile } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { MediaPicker } from "./MediaPicker";
+import { ChatActions } from "./ChatActions";
 
 interface Message {
   id: string;
@@ -25,9 +25,10 @@ interface Message {
 interface ChatWindowProps {
   conversationId: string;
   currentUserId: string;
+  onConversationDeleted?: () => void;
 }
 
-export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) => {
+export const ChatWindow = ({ conversationId, currentUserId, onConversationDeleted }: ChatWindowProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,11 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
         (payload) => {
           console.log('New message received:', payload);
           fetchMessages(); // Refetch to get sender details
+          
+          // Create notification for the other user
+          if (payload.new.sender_id !== currentUserId) {
+            createNotification(payload.new.sender_id, payload.new.content);
+          }
         }
       )
       .subscribe();
@@ -69,6 +75,33 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const createNotification = async (senderId: string, messageContent: string) => {
+    try {
+      // Get sender's display name
+      const { data: senderData } = await supabase
+        .from('profiles')
+        .select('display_name, email')
+        .eq('id', senderId)
+        .single();
+
+      const senderName = senderData?.display_name || senderData?.email?.split('@')[0] || 'Someone';
+
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: currentUserId,
+          type: 'message',
+          title: `New message from ${senderName}`,
+          message: messageContent.length > 50 ? messageContent.substring(0, 50) + '...' : messageContent,
+          related_id: conversationId
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
   };
 
   const fetchConversationDetails = async () => {
@@ -141,7 +174,10 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
       // Update conversation's updated_at
       await supabase
         .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ 
+          updated_at: new Date().toISOString(),
+          last_interaction_at: new Date().toISOString()
+        })
         .eq('id', conversationId);
 
       if (messageType === 'text') {
@@ -203,17 +239,32 @@ export const ChatWindow = ({ conversationId, currentUserId }: ChatWindowProps) =
       {/* Chat Header */}
       {otherUser && (
         <div className="bg-gray-900 border-b border-gray-800 p-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10 ring-2 ring-gray-700">
-              <AvatarImage src={otherUser.avatar_url || undefined} />
-              <AvatarFallback className="bg-gray-700 text-white">
-                {(otherUser.display_name || otherUser.email).charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-medium text-white">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
-              <p className="text-sm text-gray-400">{otherUser.email}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10 ring-2 ring-gray-700">
+                <AvatarImage src={otherUser.avatar_url || undefined} />
+                <AvatarFallback className="bg-gray-700 text-white">
+                  {(otherUser.display_name || otherUser.email).charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-medium text-white">{otherUser.display_name || otherUser.email.split('@')[0]}</h3>
+                <p className="text-sm text-gray-400">{otherUser.email}</p>
+                {otherUser.last_seen && (
+                  <p className="text-xs text-gray-500">
+                    Last seen {formatDistanceToNow(new Date(otherUser.last_seen), { addSuffix: true })}
+                  </p>
+                )}
+              </div>
             </div>
+            <ChatActions 
+              conversationId={conversationId}
+              otherUserId={otherUser.id}
+              otherUserName={otherUser.display_name || otherUser.email.split('@')[0]}
+              currentUserId={currentUserId}
+              onConversationDeleted={() => onConversationDeleted?.()}
+              onUserBlocked={() => onConversationDeleted?.()}
+            />
           </div>
         </div>
       )}

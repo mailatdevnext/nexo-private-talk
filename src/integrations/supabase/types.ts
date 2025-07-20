@@ -14,24 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
+          deleted_by_participant1: boolean | null
+          deleted_by_participant2: boolean | null
           id: string
+          last_interaction_at: string | null
           participant1_id: string
           participant2_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_by_participant1?: boolean | null
+          deleted_by_participant2?: boolean | null
           id?: string
+          last_interaction_at?: string | null
           participant1_id: string
           participant2_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_by_participant1?: boolean | null
+          deleted_by_participant2?: boolean | null
           id?: string
+          last_interaction_at?: string | null
           participant1_id?: string
           participant2_id?: string
           updated_at?: string
@@ -98,29 +128,71 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           email: string
           id: string
+          last_seen: string | null
+          status: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email: string
           id: string
+          last_seen?: string | null
+          status?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email?: string
           id?: string
+          last_seen?: string | null
+          status?: string | null
           updated_at?: string
         }
         Relationships: []

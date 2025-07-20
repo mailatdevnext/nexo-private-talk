@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,12 +29,37 @@ export const UserSearch = ({ currentUserId, onConversationCreated }: UserSearchP
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First, get blocked users to filter them out
+      const { data: blockedUsers } = await supabase
+        .from('blocked_users')
+        .select('blocked_id')
+        .eq('blocker_id', currentUserId);
+
+      const blockedIds = blockedUsers?.map(b => b.blocked_id) || [];
+
+      // Also get users who have blocked the current user
+      const { data: blockingUsers } = await supabase
+        .from('blocked_users')
+        .select('blocker_id')
+        .eq('blocked_id', currentUserId);
+
+      const blockingIds = blockingUsers?.map(b => b.blocker_id) || [];
+
+      const allBlockedIds = [...new Set([...blockedIds, ...blockingIds])];
+
+      let query = supabase
         .from('profiles')
         .select('*')
         .ilike('email', `%${searchEmail}%`)
         .neq('id', currentUserId)
         .limit(10);
+
+      // Filter out blocked users if any exist
+      if (allBlockedIds.length > 0) {
+        query = query.not('id', 'in', `(${allBlockedIds.join(',')})`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setSearchResults(data || []);
