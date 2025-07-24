@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Search, MessageCircle, Users, Settings, Bell, UserX } from "lucide-react";
+import { LogOut, Search, MessageCircle, Users, Settings, Bell } from "lucide-react";
 import { UserSearch } from "./UserSearch";
 import { ConversationsList } from "./ConversationsList";
 import { ChatWindow } from "./ChatWindow";
 import { ProfileSettings } from "./ProfileSettings";
-import { BlockedUsers } from "./BlockedUsers";
 import { NotificationCenter } from "./NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,7 +19,6 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
-  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const { toast } = useToast();
@@ -128,15 +127,6 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
               <Users className="h-4 w-4 mr-2" />
               Find Users
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowBlockedUsers(true)}
-              className="w-full bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
-            >
-              <UserX className="h-4 w-4 mr-2" />
-              Blocked Users
-            </Button>
           </div>
         </div>
 
@@ -185,13 +175,6 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
       {/* Modals */}
       {showProfileSettings && (
         <ProfileSettings user={user} onClose={() => setShowProfileSettings(false)} />
-      )}
-      
-      {showBlockedUsers && (
-        <BlockedUsers 
-          currentUserId={user.id} 
-          onClose={() => setShowBlockedUsers(false)} 
-        />
       )}
       
       {showNotifications && (
