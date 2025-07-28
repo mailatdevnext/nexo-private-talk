@@ -9,6 +9,7 @@ import { ConversationsList } from "./ConversationsList";
 import { ChatWindow } from "./ChatWindow";
 import { ProfileSettings } from "./ProfileSettings";
 import { NotificationCenter } from "./NotificationCenter";
+import { NexoLogo } from "./NexoLogo";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatDashboardProps {
@@ -84,7 +85,7 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
         {/* Header */}
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-white tracking-tight">NEXO</h1>
+            <NexoLogo size="md" />
             <div className="flex space-x-2">
               <Button 
                 variant="ghost" 
@@ -164,7 +165,9 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-black text-gray-400">
             <div className="text-center">
-              <MessageCircle className="h-16 w-16 mx-auto mb-4 opacity-30" />
+              <div className="mb-6">
+                <NexoLogo size="lg" className="justify-center" />
+              </div>
               <p className="text-lg mb-2">Welcome to NEXO</p>
               <p className="text-sm opacity-60">Select a conversation to start chatting</p>
             </div>
