@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, Upload } from "lucide-react";
 
 interface ProfileSettingsProps {
-  user: User;
+  user: User | null;
   onClose: () => void;
 }
 
@@ -26,10 +26,14 @@ export const ProfileSettings = ({ user, onClose }: ProfileSettingsProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchProfile();
-  }, [user.id]);
+    if (user?.id) {
+      fetchProfile();
+    }
+  }, [user?.id]);
 
   const fetchProfile = async () => {
+    if (!user?.id) return;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -52,6 +56,8 @@ export const ProfileSettings = ({ user, onClose }: ProfileSettingsProps) => {
   };
 
   const updateProfile = async () => {
+    if (!user?.id) return;
+    
     setLoading(true);
     try {
       const { error } = await supabase
@@ -81,6 +87,8 @@ export const ProfileSettings = ({ user, onClose }: ProfileSettingsProps) => {
       setLoading(false);
     }
   };
+
+  if (!user) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
