@@ -21,29 +21,9 @@ export const NexoLogo = ({ size = 'md', className = '' }: NexoLogoProps) => {
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Logo Icon */}
+      {/* Simple Diamond Logo */}
       <div className={`${sizeClasses[size]} relative flex items-center justify-center`}>
-        {/* Outer ring */}
-        <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-pulse"></div>
-        
-        {/* Inner geometric shape */}
-        <div className="relative w-full h-full flex items-center justify-center">
-          {/* Connected nodes pattern */}
-          <div className="absolute w-2 h-2 bg-primary rounded-full top-2 left-2"></div>
-          <div className="absolute w-2 h-2 bg-primary rounded-full top-2 right-2"></div>
-          <div className="absolute w-2 h-2 bg-primary rounded-full bottom-2 left-2"></div>
-          <div className="absolute w-2 h-2 bg-primary rounded-full bottom-2 right-2"></div>
-          
-          {/* Connecting lines */}
-          <div className="absolute w-0.5 h-6 bg-primary/60 transform rotate-45 origin-center"></div>
-          <div className="absolute w-0.5 h-6 bg-primary/60 transform -rotate-45 origin-center"></div>
-          
-          {/* Central core */}
-          <div className="w-3 h-3 bg-gradient-to-br from-primary to-primary/80 rounded-full shadow-lg shadow-primary/20"></div>
-        </div>
-        
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 rounded-full bg-primary/10 blur-sm"></div>
+        <div className="w-6 h-6 bg-gradient-to-br from-primary to-primary/80 transform rotate-45 rounded-sm shadow-lg shadow-primary/20"></div>
       </div>
       
       {/* Logo Text */}

@@ -1,87 +1,51 @@
-
-import { useState, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { LogOut, Search, MessageCircle, Users, Settings, Bell } from "lucide-react";
-import { UserSearch } from "./UserSearch";
-import { ConversationsList } from "./ConversationsList";
-import { ChatWindow } from "./ChatWindow";
-import { ProfileSettings } from "./ProfileSettings";
-import { NotificationCenter } from "./NotificationCenter";
-import { NexoLogo } from "./NexoLogo";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { NexoLogo } from './NexoLogo';
+import { User } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Bell, Settings } from 'lucide-react';
+import { UserSearch } from './UserSearch';
+import { ConversationsList } from './ConversationsList';
+import { ChatWindow } from './ChatWindow';
+import { ProfileSettings } from './ProfileSettings';
+import { NotificationCenter } from './NotificationCenter';
 
 interface ChatDashboardProps {
-  user: User;
+  user: User | null;
 }
 
-export const ChatDashboard = ({ user }: ChatDashboardProps) => {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showProfileSettings, setShowProfileSettings] = useState(false);
+export const ChatDashboard: React.FC<ChatDashboardProps> = ({ user }) => {
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const { toast } = useToast();
+  const [conversations, setConversations] = useState([
+    {
+      id: '1',
+      name: 'John Doe',
+      lastMessage: 'Hey there!',
+      timestamp: '2024-07-24T12:00:00.000Z',
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      lastMessage: 'How are you?',
+      timestamp: '2024-07-23T18:30:00.000Z',
+    },
+    {
+      id: '3',
+      name: 'Alice Johnson',
+      lastMessage: 'See you later!',
+      timestamp: '2024-07-22T09:45:00.000Z',
+    },
+  ]);
 
-  useEffect(() => {
-    fetchNotificationCount();
-    
-    // Subscribe to new notifications
-    const notificationsSubscription = supabase
-      .channel(`notifications-dashboard-${user.id}`)
-      .on('postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => fetchNotificationCount()
-      )
-      .subscribe();
-
-    return () => {
-      notificationsSubscription.unsubscribe();
-    };
-  }, [user.id]);
-
-  const fetchNotificationCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-
-      if (error) throw error;
-      setNotificationCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching notification count:', error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleUserSelect = (userId: string) => {
+    console.log('Selected user:', userId);
   };
 
   return (
-    <div className="h-screen flex bg-black">
+    <div className="h-screen bg-black text-white flex">
       {/* Sidebar */}
-      <div className="w-80 bg-gray-900 border-r border-gray-800 flex flex-col">
+      <div className="w-80 bg-gray-900 flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between mb-6">
@@ -90,77 +54,58 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setShowNotifications(true)}
-                className="text-gray-400 hover:text-white hover:bg-gray-800 relative"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="text-gray-400 hover:text-white"
               >
                 <Bell className="h-4 w-4" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
-                )}
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setShowProfileSettings(true)}
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                onClick={() => setShowProfile(!showProfile)}
+                className="text-gray-400 hover:text-white"
               >
                 <Settings className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowSearch(!showSearch)}
-              className="w-full bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Find Users
-            </Button>
-          </div>
+          
+          {/* User Search */}
+          <UserSearch 
+            onUserSelect={handleUserSelect}
+            currentUserId={user?.id}
+          />
         </div>
 
-        {/* User Search */}
-        {showSearch && (
-          <div className="p-4 border-b border-gray-800 bg-gray-800/50">
-            <UserSearch 
-              currentUserId={user.id} 
-              onConversationCreated={(conversationId) => {
-                setSelectedConversationId(conversationId);
-                setShowSearch(false);
-              }}
-            />
-          </div>
-        )}
-
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
-          <ConversationsList 
-            currentUserId={user.id}
-            selectedConversationId={selectedConversationId}
-            onSelectConversation={setSelectedConversationId}
+        <div className="flex-1 overflow-hidden">
+          <ConversationsList
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            onSelectConversation={setSelectedConversation}
+            currentUserId={user?.id || ''}
           />
+        </div>
+
+        {/* Footer with About link */}
+        <div className="p-4 border-t border-gray-800">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => window.open('/about', '_blank')}
+            className="w-full text-gray-400 hover:text-white text-sm"
+          >
+            About NEXO
+          </Button>
         </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {selectedConversationId ? (
+        {selectedConversation ? (
           <ChatWindow 
-            conversationId={selectedConversationId}
-            currentUserId={user.id}
-            onConversationDeleted={() => setSelectedConversationId(null)}
+            conversation={selectedConversation}
+            currentUserId={user?.id || ''}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-black text-gray-400">
@@ -175,20 +120,22 @@ export const ChatDashboard = ({ user }: ChatDashboardProps) => {
         )}
       </div>
 
-      {/* Modals */}
-      {showProfileSettings && (
-        <ProfileSettings user={user} onClose={() => setShowProfileSettings(false)} />
+      {/* Profile Settings Modal */}
+      {showProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+            <ProfileSettings user={user} onClose={() => setShowProfile(false)} />
+          </div>
+        </div>
       )}
-      
+
+      {/* Notifications Modal */}
       {showNotifications && (
-        <NotificationCenter 
-          currentUserId={user.id} 
-          onClose={() => {
-            setShowNotifications(false);
-            fetchNotificationCount();
-          }}
-          onConversationSelect={setSelectedConversationId}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+            <NotificationCenter onClose={() => setShowNotifications(false)} />
+          </div>
+        </div>
       )}
     </div>
   );
