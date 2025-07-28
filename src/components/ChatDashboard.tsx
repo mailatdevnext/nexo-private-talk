@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { NexoLogo } from './NexoLogo';
 import { User } from '@/lib/types';
@@ -17,29 +18,13 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ user }) => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [conversations, setConversations] = useState([
-    {
-      id: '1',
-      name: 'John Doe',
-      lastMessage: 'Hey there!',
-      timestamp: '2024-07-24T12:00:00.000Z',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      lastMessage: 'How are you?',
-      timestamp: '2024-07-23T18:30:00.000Z',
-    },
-    {
-      id: '3',
-      name: 'Alice Johnson',
-      lastMessage: 'See you later!',
-      timestamp: '2024-07-22T09:45:00.000Z',
-    },
-  ]);
 
-  const handleUserSelect = (userId: string) => {
-    console.log('Selected user:', userId);
+  const handleConversationCreated = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+  };
+
+  const handleConversationDeleted = () => {
+    setSelectedConversation(null);
   };
 
   return (
@@ -72,18 +57,17 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ user }) => {
           
           {/* User Search */}
           <UserSearch 
-            onUserSelect={handleUserSelect}
-            currentUserId={user?.id}
+            currentUserId={user?.id || ''}
+            onConversationCreated={handleConversationCreated}
           />
         </div>
 
         {/* Conversations List */}
         <div className="flex-1 overflow-hidden">
           <ConversationsList
-            conversations={conversations}
-            selectedConversation={selectedConversation}
-            onSelectConversation={setSelectedConversation}
             currentUserId={user?.id || ''}
+            selectedConversationId={selectedConversation}
+            onSelectConversation={setSelectedConversation}
           />
         </div>
 
@@ -104,8 +88,9 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ user }) => {
       <div className="flex-1 flex flex-col">
         {selectedConversation ? (
           <ChatWindow 
-            conversation={selectedConversation}
+            conversationId={selectedConversation}
             currentUserId={user?.id || ''}
+            onConversationDeleted={handleConversationDeleted}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-black text-gray-400">
@@ -133,7 +118,11 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ user }) => {
       {showNotifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <NotificationCenter onClose={() => setShowNotifications(false)} />
+            <NotificationCenter 
+              currentUserId={user?.id || ''}
+              onClose={() => setShowNotifications(false)}
+              onConversationSelect={setSelectedConversation}
+            />
           </div>
         </div>
       )}
